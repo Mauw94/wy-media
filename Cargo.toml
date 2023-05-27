@@ -10,3 +10,8 @@ tui = "0.19.0"
 tokio = { version = "1", features = ["full"] }
 failure = "0.1.8"
 crossterm = "0.25.0"
+m3u8-rs = "3.0.0"
+dirs = "4.0.0"
+rodio = { version = "0.15.0", features = ["mp3", "wav", "flac"] }
+mp3-duration = "0.1.10"
+rand = "0.8.5"
