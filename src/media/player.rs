@@ -1,12 +1,12 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader},
+    io::BufReader,
     ops::Add,
     path::Path,
     time::{Duration, Instant},
 };
 
-use rodio::{cpal, Decoder, OutputStream, OutputStreamHandle, Sink, Source};
+use rodio::{cpal, Decoder, OutputStream, OutputStreamHandle, Sink};
 use tui::widgets::ListState;
 
 use super::media::{self, Media};
@@ -78,7 +78,7 @@ impl Player for MusicPlayer {
             media::Source::Local(path) => {
                 return self.play_with_file(path, once);
             }
-            media::Source::M3u8(_path) => false,
+            // media::Source::M3u8(_path) => false,
         }
     }
 
@@ -229,20 +229,20 @@ impl MusicPlayer {
                 }
             }
         } else {
-            if let Ok(f) = File::open(path.as_str()) {
-                let dec = Decoder::new(f);
-                if let Ok(dec) = dec {
-                    if let Some(dur) = dec.total_duration() {
-                        duration = dur;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
+            // if let Ok(f) = File::open(path.as_str()) {
+            //     let dec = Decoder::new(f);
+            //     if let Ok(dec) = dec {
+            //         if let Some(dur) = dec.total_duration() {
+            //             duration = dur;
+            //         } else {
+            //             return false;
+            //         }
+            //     } else {
+            //         return false;
+            //     }
+            // } else {
+            //     return false;
+            // }
             return true;
         }
         match File::open(path.as_str()) {

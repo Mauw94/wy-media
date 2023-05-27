@@ -59,6 +59,7 @@ impl RadioExplorer {
     }
 }
 
+#[allow(dead_code)]
 pub fn draw_radio_list<B>(app: &mut App, frame: &mut Frame<B>, area: Rect)
 where
     B: Backend,

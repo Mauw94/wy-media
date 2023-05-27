@@ -1,0 +1,2 @@
++ remove item from playlist
++ cannot add same item twice

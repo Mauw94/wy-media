@@ -16,6 +16,7 @@ use tui::{
 
 use crate::app::App;
 
+#[allow(dead_code)]
 pub struct FsExplorer {
     pub current_path: String,
     pub files: Vec<DirEntry>,
@@ -140,7 +141,7 @@ where
     for entry in &fse.files {
         draw_file_item(entry, &mut items);
     }
-    let mut blck = Block::default()
+    let blck = Block::default()
         .title("Explorer")
         .title_alignment(Alignment::Center)
         .borders(Borders::ALL)

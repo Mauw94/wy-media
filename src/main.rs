@@ -1,11 +1,10 @@
 use app::*;
-use ui::*;
 
 mod app;
 mod config;
-mod ui;
-mod media;
 mod handler;
+mod media;
+mod ui;
 
 fn main() {
     let mut app = App::new().unwrap();
