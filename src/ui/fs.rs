@@ -14,7 +14,7 @@ use tui::{
     Frame,
 };
 
-use crate::app::App;
+use crate::app::{ActiveModules, App};
 
 #[allow(dead_code)]
 pub struct FsExplorer {
@@ -141,12 +141,15 @@ where
     for entry in &fse.files {
         draw_file_item(entry, &mut items);
     }
-    let blck = Block::default()
+    let mut blck = Block::default()
         .title("Explorer")
         .title_alignment(Alignment::Center)
         .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(Color::Cyan));
+        .border_type(BorderType::Rounded);
+
+    if app.active_modules == ActiveModules::Fs {
+        blck = blck.border_style(Style::default().fg(Color::Cyan));
+    }
 
     let file_list = List::new(items)
         .block(blck)

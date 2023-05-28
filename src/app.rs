@@ -26,11 +26,18 @@ use crate::{
     }, handler::handle_keyboard_event,
 };
 
+#[derive(PartialEq)]
+pub enum ActiveModules {
+    Fs,
+    PlayList
+}
+
 pub struct App {
     pub player: MusicPlayer,
     pub radio_fs: RadioExplorer,
     pub fs: FsExplorer,
     pub music_controller: MusicController,
+    pub active_modules: ActiveModules,
     config: Config,
     msg: String,
 }
@@ -47,6 +54,7 @@ impl App {
             music_controller: MusicController {
                 state: ListState::default(),
             },
+            active_modules: ActiveModules::Fs,
             config: Config::default(),
             msg: "Welcome to wy-media".to_string(),
         })

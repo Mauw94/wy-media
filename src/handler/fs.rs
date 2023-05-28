@@ -6,7 +6,7 @@ use std::{
 use crossterm::event::KeyCode;
 
 use crate::{
-    app::App,
+    app::{ActiveModules, App},
     media::{
         media::{Media, Source},
         player::Player,
@@ -72,6 +72,10 @@ fn add_media_to_player(app: &mut App, once: bool) -> bool {
 }
 
 pub fn handle_fs(app: &mut App, key: KeyCode) -> bool {
+    if app.active_modules != ActiveModules::Fs {
+        return false;
+    }
+
     let fse = &mut app.fs;
     let len = fse.dirs.len() + fse.files.len();
     match key {

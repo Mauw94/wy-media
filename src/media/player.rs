@@ -28,6 +28,7 @@ pub struct PlayListItem {
 
 pub struct PlayList {
     pub lists: Vec<PlayListItem>,
+    pub index: ListState
 }
 
 pub trait Player {
@@ -55,6 +56,17 @@ pub struct MusicPlayer {
     initialized: bool,
 }
 
+impl PlayList {
+    pub fn default() -> Self {
+        let mut list_state = ListState::default();
+        list_state.select(Some(0));
+        Self {
+            lists: vec![],
+            index: list_state
+        }
+    }
+}
+
 impl Player for MusicPlayer {
     fn new() -> Self {
         for dev in cpal::available_hosts() {
@@ -65,7 +77,7 @@ impl Player for MusicPlayer {
         Self {
             current_time: Duration::from_secs(0),
             total_time: Duration::from_secs(0),
-            play_list: PlayList { lists: vec![] },
+            play_list: PlayList::default(),
             stream,
             stream_handle,
             sink,
@@ -256,8 +268,8 @@ impl MusicPlayer {
                     self.sink = sink;
                     self.play_list.lists.clear();
                 }
-                let mut state = ListState::default();
-                state.select(Some(0));
+                // let mut state = ListState::default();
+                // state.select(Some(0));
                 self.play_list.lists.push(PlayListItem {
                     name: file_name,
                     duration,
