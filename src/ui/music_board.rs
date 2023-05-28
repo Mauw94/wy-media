@@ -92,11 +92,11 @@ where
 
     frame.render_widget(text, sub_layout[0]);
     frame.render_widget(bar, sub_layout[1]);
-    let mut p = Paragraph::new(vec![Spans::from("▶(s) >>|(n) EXT(q) HLP(h)")])
+    let mut p = Paragraph::new(vec![Spans::from("▶(s) >>|(n) EXT(q) REM(r)")])
         .style(Style::default())
         .alignment(Alignment::Center);
     if player.is_playing() {
-        p = Paragraph::new(vec![Spans::from("||(s) >>|(n) EXT(q) HELP(h)")])
+        p = Paragraph::new(vec![Spans::from("||(s) >>|(n) EXT(q) REM(r)")])
             .alignment(Alignment::Center);
     }
     let blck = Block::default()

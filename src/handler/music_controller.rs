@@ -54,7 +54,27 @@ pub fn handle_playlist(app: &mut App, key: KeyCode) -> bool {
                 return true;
             }
         }
+        KeyCode::Enter => {
+            if let Some(selected) = playlist.index.selected() {
+                play_selected_song(app, selected);
+            }
+        }
+        KeyCode::Char('r') | KeyCode::Char('R') => {
+            if let Some(selected) = playlist.index.selected() {
+                remove_from_playlist(app, selected);
+            }
+        }
         _ => {}
     }
     false
+}
+
+fn play_selected_song(app: &mut App, selected: usize) -> bool {
+    let player = &mut app.player;
+    player.play_selected(selected)
+}
+
+fn remove_from_playlist(app: &mut App, selected: usize) -> bool {
+    let player = &mut app.player;
+    player.remove_from_playlist(selected)
 }

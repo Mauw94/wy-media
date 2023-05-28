@@ -2,23 +2,11 @@ use tui::{
     backend::Backend,
     layout::{Alignment, Rect},
     style::{Color, Style},
-    widgets::{Block, BorderType, Borders, List, ListItem, ListState},
+    widgets::{Block, BorderType, Borders, List, ListItem},
     Frame,
 };
 
 use crate::app::{ActiveModules, App};
-
-pub struct PlayListExplorer {
-    pub index: ListState,
-}
-
-impl PlayListExplorer {
-    pub fn default() -> Self {
-        let mut list_state = ListState::default();
-        list_state.select(Some(0));
-        Self { index: list_state }
-    }
-}
 
 pub fn draw_play_list<B>(app: &mut App, frame: &mut Frame<B>, area: Rect)
 where

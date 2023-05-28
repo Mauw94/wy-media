@@ -11,7 +11,7 @@ use tui::widgets::ListState;
 
 use super::media::{self, Media};
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum PlayStatus {
     Waiting,
     Playing(Instant, Duration),
@@ -28,13 +28,14 @@ pub struct PlayListItem {
 
 pub struct PlayList {
     pub lists: Vec<PlayListItem>,
-    pub index: ListState
+    pub index: ListState,
 }
 
 pub trait Player {
     fn new() -> Self;
     fn add_to_list(&mut self, media: Media, once: bool) -> bool;
-    fn play(&mut self) -> bool;
+    fn play(&mut self, song_index: usize) -> bool;
+    fn play_selected(&mut self, selected: usize) -> bool;
     fn next(&mut self) -> bool;
     fn stop(&mut self) -> bool;
     fn pause(&mut self) -> bool;
@@ -44,12 +45,15 @@ pub trait Player {
     fn tick(&mut self);
     fn volume(&self) -> f32;
     fn set_volume(&mut self, new_volume: f32) -> bool;
+    fn load_new_song(&mut self, index: usize) -> bool;
+    fn remove_from_playlist(&mut self, song_index: usize) -> bool;
 }
 
 pub struct MusicPlayer {
     pub current_time: Duration,
     pub total_time: Duration,
     pub play_list: PlayList,
+    selected_song_index: usize,
     stream: OutputStream,
     stream_handle: OutputStreamHandle,
     sink: Sink,
@@ -62,7 +66,7 @@ impl PlayList {
         list_state.select(Some(0));
         Self {
             lists: vec![],
-            index: list_state
+            index: list_state,
         }
     }
 }
@@ -78,6 +82,7 @@ impl Player for MusicPlayer {
             current_time: Duration::from_secs(0),
             total_time: Duration::from_secs(0),
             play_list: PlayList::default(),
+            selected_song_index: 0,
             stream,
             stream_handle,
             sink,
@@ -89,14 +94,13 @@ impl Player for MusicPlayer {
         match media.src {
             media::Source::Local(path) => {
                 return self.play_with_file(path, once);
-            }
-            // media::Source::M3u8(_path) => false,
+            } // media::Source::M3u8(_path) => false,
         }
     }
 
-    fn play(&mut self) -> bool {
+    fn play(&mut self, song_index: usize) -> bool {
         self.sink.play();
-        if let Some(item) = self.play_list.lists.first_mut() {
+        if let Some(item) = self.play_list.lists.get_mut(song_index) {
             let status = &mut item.status;
             match status {
                 PlayStatus::Waiting => {
@@ -111,23 +115,29 @@ impl Player for MusicPlayer {
         true
     }
 
+    fn play_selected(&mut self, selected: usize) -> bool {
+        let len = self.play_list.lists.len();
+        if selected > len {
+            return false;
+        }
+        if self.is_playing() {
+            self.stop();
+        }
+
+        self.load_new_song(selected)
+    }
+
     fn next(&mut self) -> bool {
         let len = self.play_list.lists.len();
         if len >= 1 {
-            self.play_list.lists.remove(0);
             self.stop();
             if !self.play_list.lists.is_empty() {
-                let top_music = self.play_list.lists.first().unwrap();
-                let f = File::open(top_music.path.as_str()).unwrap();
-                let buf_reader = BufReader::new(f);
-                let (stream, stream_handle) = OutputStream::try_default().unwrap();
-                self.stream = stream;
-                self.stream_handle = stream_handle;
-                let volume = self.volume();
-                self.sink = Sink::try_new(&self.stream_handle).unwrap();
-                self.set_volume(volume);
-                self.sink.append(Decoder::new(buf_reader).unwrap());
-                self.play();
+                if self.selected_song_index + 1 >= len {
+                    self.selected_song_index = 0;
+                } else {
+                    self.selected_song_index += 1
+                }
+                return self.load_new_song(self.selected_song_index);
             }
         } else {
             // nothing in playlist
@@ -156,6 +166,13 @@ impl Player for MusicPlayer {
         true
     }
 
+    fn remove_from_playlist(&mut self, song_index: usize) -> bool {
+        // TODO: fix weird layout after removing from the play list
+        self.play_list.lists.remove(song_index);
+        self.play_list.index.select(Some(0));
+        true
+    }
+
     fn resume(&mut self) -> bool {
         self.sink.play();
         if let Some(item) = self.play_list.lists.first_mut() {
@@ -181,7 +198,7 @@ impl Player for MusicPlayer {
 
     fn tick(&mut self) {
         let is_playing = self.is_playing();
-        if let Some(song) = self.play_list.lists.first_mut() {
+        if let Some(song) = self.play_list.lists.get_mut(self.selected_song_index) {
             let status = &mut song.status;
             match status {
                 PlayStatus::Waiting => {
@@ -218,11 +235,30 @@ impl Player for MusicPlayer {
         self.sink.set_volume(new_volume);
         true
     }
+
+    fn load_new_song(&mut self, index: usize) -> bool {
+        if let Some(item) = self.play_list.lists.get_mut(index) {
+            item.status = PlayStatus::Waiting;
+            let f = File::open(item.path.as_str()).unwrap();
+            let buf_reader = BufReader::new(f);
+            let (stream, stream_handle) = OutputStream::try_default().unwrap();
+            self.stream = stream;
+            self.stream_handle = stream_handle;
+            let volume = self.volume();
+            self.sink = Sink::try_new(&self.stream_handle).unwrap();
+            self.set_volume(volume);
+            self.sink.append(Decoder::new(buf_reader).unwrap());
+            self.selected_song_index = index;
+            self.play(index);
+        }
+
+        false
+    }
 }
 
 impl MusicPlayer {
     pub fn playing_song(&self) -> Option<&PlayListItem> {
-        self.play_list.lists.first()
+        self.play_list.lists.get(self.selected_song_index)
     }
 
     fn play_with_file(&mut self, path: String, once: bool) -> bool {
@@ -268,8 +304,6 @@ impl MusicPlayer {
                     self.sink = sink;
                     self.play_list.lists.clear();
                 }
-                // let mut state = ListState::default();
-                // state.select(Some(0));
                 self.play_list.lists.push(PlayListItem {
                     name: file_name,
                     duration,
@@ -280,7 +314,7 @@ impl MusicPlayer {
                 if !self.initialized {
                     self.initialized = true;
                 }
-                self.play();
+                self.play(self.selected_song_index);
                 self.tick();
                 return true;
             }
